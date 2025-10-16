@@ -205,9 +205,11 @@ export const parseCourtNames = (courtNamesString) => {
       const displayName = parts[1];  // The name after ~
       
       // Filter out invalid entries
-      if (courtNumber && courtNumber !== '0' && courtNumber !== 'D' && displayName) {
+      if (code && courtNumber && courtNumber !== '0' && courtNumber !== 'D' && displayName) {
         courts.push({
-          id: courtNumber, // This is the actual court number to send to API
+          courtCode: code, // The court code (1, 2, or 3) - which database group
+          courtNumber: courtNumber, // The actual court number within that group
+          id: courtNumber, // Keep id for backward compatibility with select value
           name: displayName.trim(),
           raw: entry,
         });

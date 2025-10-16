@@ -17,14 +17,15 @@ const CauseList = () => {
 
   const [selectedState, setSelectedState] = useState('');
   const [selectedDistrict, setSelectedDistrict] = useState('');
-  const [selectedCourtCode, setSelectedCourtCode] = useState('');
-  const [selectedCourtNumber, setSelectedCourtNumber] = useState('');
+  const [selectedCourtComplexCode, setSelectedCourtComplexCode] = useState(''); // "1,2,3"
+  const [selectedCourt, setSelectedCourt] = useState(null); // Full court object with courtCode, courtNumber, name
   const [causeListType, setCauseListType] = useState('CIVIL');
   const [selectedDate, setSelectedDate] = useState('');
 
   const [causeListData, setCauseListData] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [notFound, setNotFound] = useState(false);
 
   // Load states on mount
   useEffect(() => {
@@ -62,12 +63,13 @@ const CauseList = () => {
   const handleStateChange = async (stateCode) => {
     setSelectedState(stateCode);
     setSelectedDistrict('');
-    setSelectedCourtCode('');
-    setSelectedCourtNumber('');
+    setSelectedCourtComplexCode('');
+    setSelectedCourt(null);
     setDistricts([]);
     setCourtComplexes([]);
     setCourtNames([]);
     setCauseListData(null);
+    setNotFound(false);
 
     if (!stateCode) return;
 
@@ -84,11 +86,12 @@ const CauseList = () => {
 
   const handleDistrictChange = async (districtCode) => {
     setSelectedDistrict(districtCode);
-    setSelectedCourtCode('');
-    setSelectedCourtNumber('');
+    setSelectedCourtComplexCode('');
+    setSelectedCourt(null);
     setCourtComplexes([]);
     setCourtNames([]);
     setCauseListData(null);
+    setNotFound(false);
 
     if (!districtCode || !selectedState) return;
 
@@ -103,23 +106,23 @@ const CauseList = () => {
     }
   };
 
-  const handleCourtComplexChange = async (courtCode) => {
-    console.log('Court Complex Selected - Court Code:', courtCode);
-    setSelectedCourtCode(courtCode);
-    setSelectedCourtNumber(''); // Reset court number when court complex changes
+  const handleCourtComplexChange = async (courtComplexCode) => {
+    console.log('Court Complex Selected - Complex Code:', courtComplexCode);
+    setSelectedCourtComplexCode(courtComplexCode);
+    setSelectedCourt(null);
     setCourtNames([]);
     setCauseListData(null);
+    setNotFound(false);
 
-    if (!courtCode || !selectedDistrict || !selectedState) return;
+    if (!courtComplexCode || !selectedDistrict || !selectedState) return;
 
     try {
-      const response = await getCourtNames(selectedState, selectedDistrict, courtCode);
+      const response = await getCourtNames(selectedState, selectedDistrict, courtComplexCode);
       if (response.status === 'success' && response.data?.courtNames) {
         console.log('Raw court names from API:', response.data.courtNames);
         const parsed = parseCourtNames(response.data.courtNames);
-        console.log('Parsed court names:', parsed);
+        console.log('Parsed court names with codes:', parsed);
         setCourtNames(parsed);
-        // Don't auto-select the first court name
       }
     } catch (err) {
       console.error('Error loading court names:', err);
@@ -130,7 +133,7 @@ const CauseList = () => {
   const handleSearch = async (e) => {
     e.preventDefault();
 
-    if (!selectedState || !selectedDistrict || !selectedCourtCode || !selectedCourtNumber || !selectedDate) {
+    if (!selectedState || !selectedDistrict || !selectedCourtComplexCode || !selectedCourt || !selectedDate) {
       setError('Please fill in all fields');
       return;
     }
@@ -138,13 +141,14 @@ const CauseList = () => {
     setLoading(true);
     setError('');
     setCauseListData(null);
+    setNotFound(false);
 
     try {
       console.log('Cause List Request:', {
         stateCode: selectedState,
         districtCode: selectedDistrict,
-        courtCode: selectedCourtCode,
-        courtNumber: selectedCourtNumber,
+        courtCode: selectedCourt.courtCode,
+        courtNumber: selectedCourt.courtNumber,
         causeListType: causeListType,
         date: formatDateForAPI(selectedDate),
       });
@@ -152,21 +156,22 @@ const CauseList = () => {
       const response = await getCauseList({
         stateCode: selectedState,
         districtCode: selectedDistrict,
-        courtCode: selectedCourtCode,
-        courtNumber: selectedCourtNumber,
+        courtCode: selectedCourt.courtCode,
+        courtNumber: selectedCourt.courtNumber,
         causeListType: causeListType,
         date: formatDateForAPI(selectedDate),
       });
 
       if (response.status === 'success' && response.data) {
         setCauseListData(response.data.cases);
+        setNotFound(false);
       } else {
-        setError('No cause list found for the selected criteria');
+        setNotFound(true);
       }
     } catch (err) {
       console.error('Error fetching cause list:', err);
       if (err.response?.status === 404) {
-        setError('No cause list found for the selected date and court');
+        setNotFound(true);
       } else if (err.response?.status === 400) {
         setError('Invalid parameters. Please check your selections.');
       } else {
@@ -226,7 +231,7 @@ const CauseList = () => {
           <div className="form-group">
             <label>Court Complex *</label>
             <select
-              value={selectedCourtCode}
+              value={selectedCourtComplexCode}
               onChange={(e) => handleCourtComplexChange(e.target.value)}
               className="form-select"
               disabled={!selectedDistrict || loading}
@@ -244,17 +249,19 @@ const CauseList = () => {
           <div className="form-group">
             <label>Court Name *</label>
             <select
-              value={selectedCourtNumber}
+              value={selectedCourt?.courtNumber || ''}
               onChange={(e) => {
-                console.log('Court Name Selected - Court Number:', e.target.value);
-                setSelectedCourtNumber(e.target.value);
+                const courtNumber = e.target.value;
+                const court = courtNames.find(c => c.courtNumber === courtNumber);
+                console.log('Court Name Selected:', court);
+                setSelectedCourt(court || null);
               }}
               className="form-select"
-              disabled={!selectedCourtCode || loading}
+              disabled={!selectedCourtComplexCode || loading}
             >
               <option value="">Select Court Name</option>
               {courtNames.map((court) => (
-                <option key={court.id} value={court.id}>
+                <option key={court.courtNumber} value={court.courtNumber}>
                   {court.name}
                 </option>
               ))}
@@ -300,6 +307,26 @@ const CauseList = () => {
         </div>
       )}
 
+      {notFound && selectedCourt && (
+        <div className="cause-list-result">
+          <div className="court-header">
+            <h3>{selectedCourt.name}</h3>
+            <p className="court-date">
+              {selectedDate ? new Date(selectedDate).toLocaleDateString('en-IN', { 
+                day: '2-digit', 
+                month: 'short', 
+                year: 'numeric' 
+              }) : ''}
+            </p>
+          </div>
+          <div className="no-causes-found">
+            <div className="no-causes-icon">📋</div>
+            <h4>No Causes Found</h4>
+            <p>There are no causes scheduled for this court on the selected date.</p>
+          </div>
+        </div>
+      )}
+
       {causeListData && (
         <div className="cause-list-result">
           <div
@@ -309,7 +336,7 @@ const CauseList = () => {
         </div>
       )}
 
-      {!causeListData && !loading && !error && (
+      {!causeListData && !loading && !error && !notFound && (
         <div className="empty-state">
           <div className="empty-icon">📅</div>
           <h3>No Cause List</h3>
