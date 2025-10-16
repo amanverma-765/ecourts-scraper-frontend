@@ -1,13 +1,41 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import './Dashboard.css';
 
 const Dashboard = ({ children, activeTab, onTabChange }) => {
   const [sidebarOpen, setSidebarOpen] = useState(true);
 
+  // Automatically close sidebar on mobile screens
+  useEffect(() => {
+    const handleResize = () => {
+      if (window.innerWidth <= 768) {
+        setSidebarOpen(false);
+      } else {
+        setSidebarOpen(true);
+      }
+    };
+
+    // Set initial state
+    handleResize();
+
+    // Add event listener
+    window.addEventListener('resize', handleResize);
+
+    // Cleanup
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
   const menuItems = [
     { id: 'search-case', label: 'Search Case Details', icon: '📋' },
     { id: 'cause-list', label: 'Cause List', icon: '📅' },
   ];
+
+  const handleTabChange = (tabId) => {
+    onTabChange(tabId);
+    // Auto-close sidebar on mobile after selecting a tab
+    if (window.innerWidth <= 768) {
+      setSidebarOpen(false);
+    }
+  };
 
   return (
     <div className="dashboard">
@@ -45,7 +73,7 @@ const Dashboard = ({ children, activeTab, onTabChange }) => {
               <button
                 key={item.id}
                 className={`nav-item ${activeTab === item.id ? 'active' : ''}`}
-                onClick={() => onTabChange(item.id)}
+                onClick={() => handleTabChange(item.id)}
               >
                 <span className="nav-icon">{item.icon}</span>
                 {sidebarOpen && <span className="nav-label">{item.label}</span>}
