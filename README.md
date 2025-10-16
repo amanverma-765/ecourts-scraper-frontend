@@ -1,4 +1,4 @@
-# E-Court Management System - Frontend
+# E-Court Scraper - Frontend
 
 A professional web application for managing and searching e-court records, built with React and Vite.
 
