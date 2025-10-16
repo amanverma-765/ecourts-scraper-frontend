@@ -12,14 +12,16 @@
 
 .page-header h2 {
   margin: 0 0 0.5rem 0;
-  color: #2c3e50;
+  color: #1e293b;
   font-size: 1.8rem;
+  font-weight: 600;
 }
 
 .page-description {
   margin: 0;
-  color: #7f8c8d;
+  color: #64748b;
   font-size: 0.95rem;
+  font-weight: 500;
 }
 
 /* Form Container */
@@ -31,7 +33,8 @@
   background: white;
   padding: 2rem;
   border-radius: 12px;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  border: 1px solid #e2e8f0;
 }
 
 .form-grid {
@@ -48,20 +51,23 @@
 
 .form-group label {
   margin-bottom: 0.5rem;
-  font-weight: 600;
-  color: #34495e;
-  font-size: 0.9rem;
+  font-weight: 700;
+  color: #0f172a;
+  font-size: 0.875rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
 }
 
 .form-control {
   padding: 0.75rem;
-  border: 2px solid #ddd;
-  border-radius: 6px;
+  border: 2px solid #e2e8f0;
+  border-radius: 12px;
   font-size: 0.95rem;
   transition: all 0.3s;
   background: white;
-  color: #2c3e50;
+  color: #0f172a;
   width: 100%;
+  font-weight: 500;
 }
 
 select.form-control {
@@ -70,21 +76,22 @@ select.form-control {
 }
 
 select.form-control option {
-  color: #2c3e50;
+  color: #0f172a;
   background: white;
   padding: 0.5rem;
 }
 
 .form-control:focus {
   outline: none;
-  border-color: #667eea;
-  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+  border-color: #10b981;
+  box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.1);
 }
 
 .form-control:disabled {
-  background-color: #f5f5f5;
+  background-color: #f8fafc;
   cursor: not-allowed;
   opacity: 0.6;
+  border-color: #cbd5e1;
 }
 
 .action-group {
@@ -95,29 +102,34 @@ select.form-control option {
 .btn-fetch {
   width: 100%;
   padding: 0.75rem 2rem;
-  font-size: 1rem;
-  font-weight: 600;
+  font-size: 0.938rem;
+  font-weight: 700;
   border: none;
-  border-radius: 6px;
+  border-radius: 12px;
   cursor: pointer;
-  transition: all 0.3s;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
 }
 
 .btn-primary {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
   color: white;
+  box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
 }
 
 .btn-primary:hover:not(:disabled) {
+  background: linear-gradient(135deg, #059669 0%, #047857 100%);
   transform: translateY(-2px);
-  box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+  box-shadow: 0 6px 20px rgba(16, 185, 129, 0.4);
 }
 
 .btn-primary:disabled {
-  background: #bdc3c7;
+  background: linear-gradient(135deg, #9ca3af 0%, #6b7280 100%);
   cursor: not-allowed;
   transform: none;
   opacity: 0.6;
+  box-shadow: none;
 }
 
 /* Error Message */
@@ -153,12 +165,13 @@ select.form-control option {
 
 .cards-header h3 {
   margin: 0;
-  color: #2c3e50;
+  color: #1e293b;
   font-size: 1.3rem;
+  font-weight: 700;
 }
 
 .fetching-indicator {
-  color: #667eea;
+  color: #10b981;
   font-weight: 600;
   animation: pulse 2s infinite;
 }
@@ -194,23 +207,23 @@ select.form-control option {
 }
 
 .card-loading {
-  border-color: #f39c12;
-  background: linear-gradient(135deg, #fff 0%, #fef5e7 100%);
+  border-color: #f59e0b;
+  background: linear-gradient(135deg, #fff 0%, #fef3c7 100%);
 }
 
 .card-success {
-  border-color: #27ae60;
-  background: linear-gradient(135deg, #fff 0%, #e8f8f5 100%);
+  border-color: #10b981;
+  background: linear-gradient(135deg, #fff 0%, #d1fae5 100%);
 }
 
 .card-no-data {
-  border-color: #95a5a6;
-  background: linear-gradient(135deg, #fff 0%, #ecf0f1 100%);
+  border-color: #94a3b8;
+  background: linear-gradient(135deg, #fff 0%, #f1f5f9 100%);
 }
 
 .card-error {
-  border-color: #e74c3c;
-  background: linear-gradient(135deg, #fff 0%, #fadbd8 100%);
+  border-color: #ef4444;
+  background: linear-gradient(135deg, #fff 0%, #fee2e2 100%);
 }
 
 .card-header {
@@ -224,7 +237,7 @@ select.form-control option {
 
 .court-name {
   margin: 0;
-  color: #2c3e50;
+  color: #0f172a;
   font-size: 1.1rem;
   font-weight: 600;
   flex: 1;
@@ -241,23 +254,23 @@ select.form-control option {
 }
 
 .badge-loading {
-  background: #fef5e7;
-  color: #d68910;
+  background: #fef3c7;
+  color: #92400e;
 }
 
 .badge-success {
-  background: #d5f4e6;
-  color: #0c7a43;
+  background: #d1fae5;
+  color: #065f46;
 }
 
 .badge-no-data {
-  background: #ecf0f1;
-  color: #5d6d7e;
+  background: #f1f5f9;
+  color: #475569;
 }
 
 .badge-error {
-  background: #fadbd8;
-  color: #a93226;
+  background: #fee2e2;
+  color: #991b1b;
 }
 
 .card-details {
@@ -272,12 +285,12 @@ select.form-control option {
 }
 
 .detail-label {
-  color: #7f8c8d;
+  color: #64748b;
   font-weight: 500;
 }
 
 .detail-value {
-  color: #2c3e50;
+  color: #0f172a;
   font-weight: 600;
 }
 
@@ -290,9 +303,9 @@ select.form-control option {
 }
 
 .card-error {
-  background: #fadbd8;
-  color: #c0392b;
-  border-left: 3px solid #e74c3c;
+  background: #fee2e2;
+  color: #991b1b;
+  border-left: 3px solid #ef4444;
 }
 
 .card-error p {
@@ -300,9 +313,9 @@ select.form-control option {
 }
 
 .card-info {
-  background: #ecf0f1;
-  color: #5d6d7e;
-  border-left: 3px solid #95a5a6;
+  background: #f1f5f9;
+  color: #475569;
+  border-left: 3px solid #94a3b8;
 }
 
 .card-info p {
@@ -316,26 +329,31 @@ select.form-control option {
 .btn-download {
   width: 100%;
   padding: 0.75rem;
-  font-size: 0.95rem;
-  font-weight: 600;
+  font-size: 0.875rem;
+  font-weight: 700;
   border: none;
-  border-radius: 6px;
+  border-radius: 10px;
   cursor: pointer;
-  transition: all 0.3s;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
   color: white;
+  text-transform: uppercase;
+  letter-spacing: 0.025em;
+  box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3);
 }
 
 .btn-download:hover:not(:disabled) {
+  background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%);
   transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+  box-shadow: 0 6px 20px rgba(239, 68, 68, 0.4);
 }
 
 .btn-download:disabled {
-  background: #bdc3c7;
+  background: linear-gradient(135deg, #9ca3af 0%, #6b7280 100%);
   cursor: not-allowed;
   transform: none;
   opacity: 0.6;
+  box-shadow: none;
 }
 
 /* Empty State */
@@ -354,13 +372,15 @@ select.form-control option {
 }
 
 .empty-state h3 {
-  color: #2c3e50;
+  color: #1e293b;
   margin: 0 0 0.5rem 0;
+  font-weight: 700;
 }
 
 .empty-state p {
-  color: #7f8c8d;
+  color: #64748b;
   margin: 0;
+  font-weight: 500;
 }
 
 /* Responsive Design */

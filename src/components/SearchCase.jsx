@@ -69,276 +69,183 @@ const SearchCase = () => {
     setDownloadingPDF(true);
     
     try {
-      const doc = new jsPDF();
-      const pageWidth = doc.internal.pageSize.getWidth();
-      const pageHeight = doc.internal.pageSize.getHeight();
-      let yPos = 20;
-      
-      const checkPageBreak = (requiredSpace = 40) => {
-        if (yPos > pageHeight - requiredSpace) {
-          doc.addPage();
-          yPos = 20;
-          return true;
-        }
-        return false;
-      };
-      
-      const addSection = (title) => {
-        checkPageBreak(30);
-        doc.setFillColor(241, 245, 249);
-        doc.rect(10, yPos, pageWidth - 20, 10, 'F');
-        doc.setFontSize(11);
-        doc.setFont('helvetica', 'bold');
-        doc.setTextColor(30, 41, 59);
-        doc.text(title, 14, yPos + 7);
-        yPos += 15;
-      };
+      const pdf = new jsPDF('p', 'mm', 'a4');
+      const pageWidth = pdf.internal.pageSize.getWidth();
+      let yPos = 15;
 
-      // Beautiful Header
-      doc.setFillColor(30, 41, 59);
-      doc.rect(0, 0, pageWidth, 40, 'F');
+      // Simple Header
+      pdf.setFontSize(18);
+      pdf.setFont('helvetica', 'bold');
+      pdf.text('Case Details Report', pageWidth / 2, yPos, { align: 'center' });
       
-      // Decorative top border
-      doc.setFillColor(16, 185, 129);
-      doc.rect(0, 0, pageWidth, 3, 'F');
+      yPos += 8;
+      pdf.setFontSize(10);
+      pdf.setFont('helvetica', 'normal');
+      pdf.text(`CNR: ${caseData.cino || 'N/A'}`, pageWidth / 2, yPos, { align: 'center' });
       
-      doc.setTextColor(255, 255, 255);
-      doc.setFontSize(24);
-      doc.setFont('helvetica', 'bold');
-      doc.text('E-COURT CASE DETAILS', pageWidth / 2, 18, { align: 'center' });
-      
-      doc.setFontSize(10);
-      doc.setFont('helvetica', 'normal');
-      doc.text('Official Case Information Report', pageWidth / 2, 28, { align: 'center' });
-      
-      // Decorative line
-      doc.setDrawColor(16, 185, 129);
-      doc.setLineWidth(0.5);
-      doc.line(60, 33, pageWidth - 60, 33);
-      
-      yPos = 50;
-      doc.setTextColor(0, 0, 0);
+      yPos += 10;
+      pdf.setDrawColor(16, 185, 129);
+      pdf.setLineWidth(0.5);
+      pdf.line(15, yPos, pageWidth - 15, yPos);
+      yPos += 10;
 
-      // Case Title Banner with gradient effect
-      doc.setFillColor(16, 185, 129);
-      doc.roundedRect(10, yPos, pageWidth - 20, 14, 2, 2, 'F');
-      
-      doc.setTextColor(255, 255, 255);
-      doc.setFontSize(13);
-      doc.setFont('helvetica', 'bold');
-      doc.text(caseData.type_name || 'Case Details', pageWidth / 2, yPos + 9, { align: 'center' });
-      
-      yPos += 22;
-      doc.setTextColor(0, 0, 0);
-
-      // Quick Info Section with icon
-      addSection('CASE IDENTIFICATION');
-
-      const quickInfo = [
-        ['CNR Number', String(caseData.cino || 'N/A')],
-        ['Case Number', String(caseData.case_no || 'N/A')],
-        ['Case Type', String(caseData.type_name || 'N/A')],
+      // Case Information
+      const caseInfo = [
+        ['Case Number', caseData.case_no || 'N/A'],
+        ['Case Type', caseData.type_name || 'N/A'],
         ['Filing Date', formatDate(caseData.date_of_filing)],
         ['Registration Date', formatDate(caseData.dt_regis)],
         ['Next Hearing', formatDate(caseData.date_next_list)],
         ['Status', caseData.archive === 'N' ? 'Active' : 'Archived']
       ];
 
-      if (caseData.ltype_name) {
-        quickInfo.push(['Case Type (Local)', String(caseData.ltype_name)]);
-      }
-
-      autoTable(doc, {
+      autoTable(pdf, {
         startY: yPos,
-        head: [],
-        body: quickInfo,
+        head: [['Case Information', '']],
+        body: caseInfo,
         theme: 'grid',
-        styles: { fontSize: 10, cellPadding: 4, lineColor: [226, 232, 240], lineWidth: 0.5 },
+        styles: { fontSize: 9, cellPadding: 3 },
+        headStyles: { fillColor: [16, 185, 129], textColor: 255, fontStyle: 'bold' },
         columnStyles: {
-          0: { fontStyle: 'bold', fillColor: [241, 245, 249], textColor: [71, 85, 105], cellWidth: 60 },
-          1: { textColor: [15, 23, 42], fontStyle: 'bold' }
+          0: { fontStyle: 'bold', cellWidth: 60 },
+          1: { cellWidth: 'auto' }
         },
-        margin: { left: 14, right: 14 }
+        margin: { left: 15, right: 15 }
       });
 
-      yPos = doc.lastAutoTable.finalY + 12;
+      yPos = pdf.lastAutoTable.finalY + 8;
 
-      // Parties Section
-      checkPageBreak(60);
-      addSection('PARTIES INVOLVED');
-
-      // Petitioner with rounded box
-      doc.setFillColor(240, 253, 244);
-      doc.roundedRect(14, yPos, pageWidth - 28, 10, 2, 2, 'F');
-      doc.setFontSize(10);
-      doc.setFont('helvetica', 'bold');
-      doc.setTextColor(16, 185, 129);
-      doc.text('PETITIONER / PLAINTIFF', 18, yPos + 7);
-      yPos += 14;
-
-      doc.setFont('helvetica', 'normal');
-      doc.setTextColor(0, 0, 0);
-      const petitionerText = String(stripHtmlLinks(caseData.petNameAdd || caseData.pet_name || caseData.petparty_name || 'Not Available'));
-      const splitPetitioner = doc.splitTextToSize(petitionerText, pageWidth - 40);
-      doc.text(splitPetitioner, 18, yPos);
-      yPos += (splitPetitioner.length * 6) + 4;
-
-      if (caseData.pet_adv) {
-        doc.setFontSize(9);
-        doc.setTextColor(100, 116, 139);
-        doc.text('Advocate: ' + String(caseData.pet_adv || ''), 18, yPos);
-        yPos += 8;
-      }
-
-      yPos += 6;
-
-      // Respondent with rounded box
-      checkPageBreak(40);
-      doc.setFillColor(254, 243, 199);
-      doc.roundedRect(14, yPos, pageWidth - 28, 10, 2, 2, 'F');
-      doc.setFontSize(10);
-      doc.setFont('helvetica', 'bold');
-      doc.setTextColor(217, 119, 6);
-      doc.text('RESPONDENT / DEFENDANT', 18, yPos + 7);
-      yPos += 14;
-
-      doc.setFont('helvetica', 'normal');
-      doc.setTextColor(0, 0, 0);
-      const respondentText = String(stripHtmlLinks(caseData.resNameAdd || caseData.res_name || caseData.resparty_name || 'Not Available'));
-      const splitRespondent = doc.splitTextToSize(respondentText, pageWidth - 40);
-      doc.text(splitRespondent, 18, yPos);
-      yPos += (splitRespondent.length * 6) + 4;
-
-      if (caseData.res_adv && caseData.res_adv !== '') {
-        doc.setFontSize(9);
-        doc.setTextColor(100, 116, 139);
-        doc.text('Advocate: ' + caseData.res_adv, 18, yPos);
-        yPos += 8;
-      }
-
-      yPos += 6;
-
-      // Court Details Section
-      checkPageBreak(50);
-      addSection('COURT DETAILS');
-
-      const courtDetails = [
-        ['State', String(caseData.state_name || 'N/A')],
-        ['District', String(caseData.dist_name || 'N/A')],
-        ['Court Complex', String(caseData.complex_name || 'N/A')],
-        ['Establishment', String(caseData.est_name || 'N/A')],
-        ['Court Number', String(caseData.court_no || 'N/A')]
+      // Parties
+      const parties = [
+        ['Petitioner', stripHtmlLinks(caseData.petNameAdd || caseData.pet_name || caseData.petparty_name || 'N/A')],
+        ['Petitioner Advocate', caseData.pet_adv || 'N/A'],
+        ['Respondent', stripHtmlLinks(caseData.resNameAdd || caseData.res_name || caseData.resparty_name || 'N/A')],
+        ['Respondent Advocate', caseData.res_adv || 'N/A']
       ];
 
-      autoTable(doc, {
+      autoTable(pdf, {
         startY: yPos,
-        head: [],
+        head: [['Parties Involved', '']],
+        body: parties,
+        theme: 'grid',
+        styles: { fontSize: 9, cellPadding: 3 },
+        headStyles: { fillColor: [16, 185, 129], textColor: 255, fontStyle: 'bold' },
+        columnStyles: {
+          0: { fontStyle: 'bold', cellWidth: 60 },
+          1: { cellWidth: 'auto' }
+        },
+        margin: { left: 15, right: 15 }
+      });
+
+      yPos = pdf.lastAutoTable.finalY + 8;
+
+      // Court Details - Complete Information
+      const courtDetails = [
+        ['Court Name', caseData.court_name || 'N/A'],
+        ['State', caseData.state_name || 'N/A'],
+        ['District', caseData.district_name || caseData.dist_name || 'N/A'],
+        ['Court Complex', caseData.complex_name || 'N/A'],
+        ['Establishment', caseData.est_name || 'N/A'],
+        ['Court Number', caseData.court_no || caseData.courtno || 'N/A'],
+        ['Designation', caseData.desgname || 'N/A'],
+        ['Judge Name', caseData.jname || 'N/A'],
+        ['Court Code', caseData.court_code || 'N/A'],
+        ['Complex Code', caseData.complex_code || 'N/A'],
+        ['Establishment Code', caseData.est_code || 'N/A']
+      ];
+
+      autoTable(pdf, {
+        startY: yPos,
+        head: [['Court Details', '']],
         body: courtDetails,
         theme: 'grid',
         styles: { fontSize: 9, cellPadding: 3 },
+        headStyles: { fillColor: [16, 185, 129], textColor: 255, fontStyle: 'bold' },
         columnStyles: {
-          0: { fontStyle: 'bold', fillColor: [248, 250, 252], textColor: [100, 116, 139], cellWidth: 60 },
-          1: { textColor: [15, 23, 42] }
+          0: { fontStyle: 'bold', cellWidth: 60 },
+          1: { cellWidth: 'auto' }
         },
-        margin: { left: 14, right: 14 }
+        margin: { left: 15, right: 15 }
       });
 
-      yPos = doc.lastAutoTable.finalY + 12;
+      yPos = pdf.lastAutoTable.finalY + 8;
 
-      // Filing & Registration Details
-      checkPageBreak(50);
-      addSection('FILING & REGISTRATION DETAILS');
-      
+      // Filing & Registration
       const filingDetails = [
         ['Filing Number', `${caseData.fil_no || 'N/A'}/${caseData.fil_year || 'N/A'}`],
         ['Filing Date', formatDate(caseData.date_of_filing)],
         ['Registration Number', `${caseData.reg_no || 'N/A'}/${caseData.reg_year || 'N/A'}`],
         ['Registration Date', formatDate(caseData.dt_regis)],
-        ['First Hearing Date', formatDate(caseData.date_first_list)],
-        ['Last Business Date', stripHtmlLinks(caseData.last_business_date) || 'N/A']
+        ['First Hearing Date', formatDate(caseData.date_first_list)]
       ];
 
-      autoTable(doc, {
+      autoTable(pdf, {
         startY: yPos,
-        head: [],
+        head: [['Filing & Registration', '']],
         body: filingDetails,
         theme: 'grid',
-        styles: { fontSize: 9, cellPadding: 3.5 },
+        styles: { fontSize: 9, cellPadding: 3 },
+        headStyles: { fillColor: [16, 185, 129], textColor: 255, fontStyle: 'bold' },
         columnStyles: {
-          0: { fontStyle: 'bold', fillColor: [248, 250, 252], textColor: [71, 85, 105], cellWidth: 60 },
-          1: { textColor: [15, 23, 42] }
+          0: { fontStyle: 'bold', cellWidth: 60 },
+          1: { cellWidth: 'auto' }
         },
-        margin: { left: 14, right: 14 }
+        margin: { left: 15, right: 15 }
       });
 
-      yPos = doc.lastAutoTable.finalY + 12;
+      yPos = pdf.lastAutoTable.finalY + 8;
 
-      // Hearing Schedule
-      checkPageBreak(50);
-      addSection('HEARING SCHEDULE');
-      
-      const hearingDetails = [
-        ['Purpose of Hearing', String(caseData.purpose_name || 'N/A')],
+      // Hearing Information
+      const hearingInfo = [
+        ['Purpose', caseData.purpose_name || 'N/A'],
         ['Next Hearing Date', formatDate(caseData.date_next_list)],
-        ['Judge Name', String(caseData.jname || 'N/A')],
-        ['Court Room Number', String(caseData.coram || caseData.court_no || 'N/A')]
+        ['Court Room', caseData.coram || caseData.court_no || 'N/A']
       ];
 
-      if (caseData.lpurpose_name) {
-        hearingDetails.push(['Purpose (Local)', String(caseData.lpurpose_name)]);
-      }
-
-      autoTable(doc, {
+      autoTable(pdf, {
         startY: yPos,
-        head: [],
-        body: hearingDetails,
+        head: [['Hearing Information', '']],
+        body: hearingInfo,
         theme: 'grid',
-        styles: { fontSize: 9, cellPadding: 3.5 },
+        styles: { fontSize: 9, cellPadding: 3 },
+        headStyles: { fillColor: [16, 185, 129], textColor: 255, fontStyle: 'bold' },
         columnStyles: {
-          0: { fontStyle: 'bold', fillColor: [254, 249, 195], textColor: [146, 64, 14], cellWidth: 60 },
-          1: { textColor: [15, 23, 42] }
+          0: { fontStyle: 'bold', cellWidth: 60 },
+          1: { cellWidth: 'auto' }
         },
-        margin: { left: 14, right: 14 }
+        margin: { left: 15, right: 15 }
       });
 
-      yPos = doc.lastAutoTable.finalY + 12;
+      yPos = pdf.lastAutoTable.finalY + 8;
 
-      // Acts and Sections
+      // Acts & Sections (if available)
       if (caseData.acts && caseData.acts.length > 0) {
-        checkPageBreak(60);
-        addSection('ACTS & SECTIONS');
-
         const actsData = caseData.acts.map((act, index) => [
           String(index + 1),
-          String(act.act_name || 'N/A'),
-          String(act.section_name || 'N/A')
+          act.act_name || 'N/A',
+          act.section_name || 'N/A'
         ]);
 
-        autoTable(doc, {
+        autoTable(pdf, {
           startY: yPos,
           head: [['#', 'Act Name', 'Section']],
           body: actsData,
-          theme: 'striped',
-          styles: { fontSize: 9, cellPadding: 3.5 },
-          headStyles: { fillColor: [59, 130, 246], textColor: [255, 255, 255], fontStyle: 'bold' },
-          alternateRowStyles: { fillColor: [248, 250, 252] },
+          theme: 'grid',
+          styles: { fontSize: 9, cellPadding: 3 },
+          headStyles: { fillColor: [16, 185, 129], textColor: 255, fontStyle: 'bold' },
           columnStyles: {
             0: { cellWidth: 15, halign: 'center' },
             1: { cellWidth: 90 },
             2: { cellWidth: 'auto' }
           },
-          margin: { left: 14, right: 14 }
+          margin: { left: 15, right: 15 }
         });
 
-        yPos = doc.lastAutoTable.finalY + 12;
+        yPos = pdf.lastAutoTable.finalY + 8;
       }
 
-      // Hearing History Section
+      // Hearing History (if available)
       if (caseData.historyOfCaseHearing) {
-        checkPageBreak(60);
-        addSection('HEARING HISTORY');
-        
-        // Parse HTML table and extract hearing history data
         const parser = new DOMParser();
         const htmlDoc = parser.parseFromString(caseData.historyOfCaseHearing, 'text/html');
         const rows = htmlDoc.querySelectorAll('tbody tr');
@@ -348,111 +255,60 @@ const SearchCase = () => {
           const cells = row.querySelectorAll('td');
           if (cells.length >= 4) {
             hearingHistoryData.push([
-              String(cells[0].textContent.trim()),  // Judge
-              stripHtmlLinks(cells[1].innerHTML.trim()),  // Business Date
-              String(cells[2].textContent.trim()),  // Hearing Date
-              String(cells[3].textContent.trim())   // Purpose
+              cells[0].textContent.trim(),
+              stripHtmlLinks(cells[1].innerHTML.trim()),
+              cells[2].textContent.trim(),
+              cells[3].textContent.trim()
             ]);
           }
         });
 
         if (hearingHistoryData.length > 0) {
-          autoTable(doc, {
+          autoTable(pdf, {
             startY: yPos,
             head: [['Judge', 'Business Date', 'Hearing Date', 'Purpose']],
             body: hearingHistoryData,
-            theme: 'striped',
-            styles: { fontSize: 8, cellPadding: 3, overflow: 'linebreak' },
-            headStyles: { 
-              fillColor: [99, 102, 241], 
-              textColor: [255, 255, 255], 
-              fontStyle: 'bold',
-              halign: 'center'
-            },
-            alternateRowStyles: { fillColor: [248, 250, 252] },
+            theme: 'grid',
+            styles: { fontSize: 8, cellPadding: 3 },
+            headStyles: { fillColor: [16, 185, 129], textColor: 255, fontStyle: 'bold' },
             columnStyles: {
               0: { cellWidth: 50 },
-              1: { cellWidth: 30, halign: 'center' },
-              2: { cellWidth: 30, halign: 'center' },
+              1: { cellWidth: 30 },
+              2: { cellWidth: 30 },
               3: { cellWidth: 'auto' }
             },
-            margin: { left: 14, right: 14 }
+            margin: { left: 15, right: 15 }
           });
-
-          yPos = doc.lastAutoTable.finalY + 12;
         }
       }
 
-      // Additional Case Information
-      checkPageBreak(50);
-      addSection('ADDITIONAL INFORMATION');
-      
-      const additionalInfo = [];
-      
-      if (caseData.date_of_decision) {
-        additionalInfo.push(['Decision Date', formatDate(caseData.date_of_decision)]);
-      }
-      if (caseData.nature_of_disposal) {
-        additionalInfo.push(['Nature of Disposal', String(caseData.nature_of_disposal)]);
-      }
-      if (caseData.case_status) {
-        additionalInfo.push(['Case Status', String(caseData.case_status)]);
-      }
-      if (caseData.police_station) {
-        additionalInfo.push(['Police Station', String(caseData.police_station)]);
-      }
-      if (caseData.fir_number) {
-        additionalInfo.push(['FIR Number', String(caseData.fir_number)]);
-      }
-      
-      additionalInfo.push(['Archive Status', caseData.archive === 'N' ? 'Active' : 'Archived']);
-
-      if (additionalInfo.length > 0) {
-        autoTable(doc, {
-          startY: yPos,
-          head: [],
-          body: additionalInfo,
-          theme: 'grid',
-          styles: { fontSize: 9, cellPadding: 3.5 },
-          columnStyles: {
-            0: { fontStyle: 'bold', fillColor: [243, 244, 246], textColor: [55, 65, 81], cellWidth: 60 },
-            1: { textColor: [15, 23, 42] }
-          },
-          margin: { left: 14, right: 14 }
-        });
-
-        yPos = doc.lastAutoTable.finalY + 12;
-      }
-
       // Footer
-      const totalPages = doc.internal.getNumberOfPages();
-      for (let i = 1; i <= totalPages; i++) {
-        doc.setPage(i);
-        doc.setFontSize(8);
-        doc.setTextColor(100, 116, 139);
-        doc.text(
-          `Generated on: ${new Date().toLocaleString('en-IN')}`,
-          14,
-          pageHeight - 10
+      const pageCount = pdf.internal.getNumberOfPages();
+      for (let i = 1; i <= pageCount; i++) {
+        pdf.setPage(i);
+        pdf.setFontSize(8);
+        pdf.setTextColor(100);
+        pdf.text(
+          `Page ${i} of ${pageCount}`,
+          pageWidth / 2,
+          pdf.internal.pageSize.getHeight() - 10,
+          { align: 'center' }
         );
-        doc.text(
-          `Page ${i} of ${totalPages}`,
-          pageWidth - 14,
-          pageHeight - 10,
+        pdf.text(
+          `Generated: ${new Date().toLocaleString('en-IN')}`,
+          pageWidth - 15,
+          pdf.internal.pageSize.getHeight() - 10,
           { align: 'right' }
         );
       }
 
       // Save PDF
-      const filename = `Case_${(caseData.cino || 'Details').replace(/[^a-zA-Z0-9]/g, '_')}_${new Date().getTime()}.pdf`;
-      doc.save(filename);
-      
-      console.log('PDF generated successfully:', filename);
+      const fileName = `Case_${caseData.cino || 'Details'}.pdf`;
+      pdf.save(fileName);
       
     } catch (error) {
       console.error('Error generating PDF:', error);
-      console.error('Error details:', error.message, error.stack);
-      alert(`Failed to generate PDF: ${error.message || 'Please try again.'}`);
+      alert('Failed to generate PDF. Please try again.');
     } finally {
       setDownloadingPDF(false);
     }

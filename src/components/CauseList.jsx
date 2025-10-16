@@ -223,185 +223,41 @@ const CauseList = () => {
     setDownloadingPDF(true);
     
     try {
-      // Use landscape orientation for better table display
-      const doc = new jsPDF('landscape', 'mm', 'a4');
-      const pageWidth = doc.internal.pageSize.getWidth();
-      const pageHeight = doc.internal.pageSize.getHeight();
-      
-      // Beautiful Header
-      doc.setFillColor(30, 41, 59);
-      doc.rect(0, 0, pageWidth, 45, 'F');
-      
-      // Decorative top border
-      doc.setFillColor(16, 185, 129);
-      doc.rect(0, 0, pageWidth, 3, 'F');
-      
-      doc.setTextColor(255, 255, 255);
-      doc.setFontSize(24);
-      doc.setFont('helvetica', 'bold');
-      doc.text('DAILY CAUSE LIST', pageWidth / 2, 18, { align: 'center' });
-      
-      doc.setFontSize(10);
-      doc.setFont('helvetica', 'normal');
-      doc.text('Official Court Proceedings Schedule', pageWidth / 2, 28, { align: 'center' });
-      
-      // Decorative line
-      doc.setDrawColor(16, 185, 129);
-      doc.setLineWidth(0.5);
-      doc.line(60, 33, pageWidth - 60, 33);
-      
-      let yPos = 55;
-      
-      // Court Information Banner
-      doc.setFillColor(16, 185, 129);
-      doc.roundedRect(10, yPos, pageWidth - 20, 18, 2, 2, 'F');
-      
-      doc.setTextColor(255, 255, 255);
-      doc.setFontSize(12);
-      doc.setFont('helvetica', 'bold');
-      const courtNameText = doc.splitTextToSize(selectedCourt.name, pageWidth - 30);
-      doc.text(courtNameText, pageWidth / 2, yPos + 7, { align: 'center' });
-      
-      yPos += 25;
-      
-      // Date and Type Information
-      doc.setFillColor(241, 245, 249);
-      doc.rect(10, yPos, pageWidth - 20, 12, 'F');
-      
-      doc.setTextColor(30, 41, 59);
-      doc.setFontSize(10);
-      doc.setFont('helvetica', 'bold');
-      
-      const formattedDate = selectedDate ? new Date(selectedDate).toLocaleDateString('en-IN', { 
-        day: '2-digit', 
-        month: 'long', 
-        year: 'numeric' 
-      }) : '';
-      
-      doc.text(`Date: ${formattedDate}`, 14, yPos + 8);
-      doc.text(`Type: ${causeListType}`, pageWidth - 14, yPos + 8, { align: 'right' });
-      
-      yPos += 18;
-      
-      // Parse HTML table to extract data
-      const parser = new DOMParser();
-      const htmlDoc = parser.parseFromString(causeListData, 'text/html');
-      const tables = htmlDoc.querySelectorAll('table');
-      
-      if (tables.length > 0) {
-        const table = tables[0];
-        const headers = [];
-        const rows = [];
-        
-        // Extract headers
-        const headerCells = table.querySelectorAll('thead tr th, tr:first-child th');
-        if (headerCells.length > 0) {
-          headerCells.forEach(th => {
-            headers.push(th.textContent.trim());
-          });
-        }
-        
-        // Extract rows (skip header row if it was in tbody)
-        const bodyRows = table.querySelectorAll('tbody tr, tr');
-        bodyRows.forEach((tr, index) => {
-          // Skip if this is the header row
-          const isHeaderRow = tr.querySelectorAll('th').length > 0 && index === 0;
-          if (isHeaderRow && headers.length > 0) return;
-          
-          // Skip section headers (rows with colspan)
-          const hasColspan = tr.querySelector('td[colspan]');
-          if (hasColspan) return;
-          
-          const cells = tr.querySelectorAll('td');
-          if (cells.length > 0) {
-            const rowData = [];
-            cells.forEach(td => {
-              // Remove HTML tags and get clean text
-              let text = td.textContent.trim();
-              // Remove excessive whitespace
-              text = text.replace(/\s+/g, ' ');
-              rowData.push(text);
-            });
-            if (rowData.length > 0) {
-              rows.push(rowData);
-            }
-          }
+      const pdf = new jsPDF('p', 'mm', 'a4');
+      const pageWidth = pdf.internal.pageSize.getWidth();
+
+      // Add header
+      pdf.setFontSize(16);
+      pdf.text('Cause List', pageWidth / 2, 15, { align: 'center' });
+      pdf.setFontSize(10);
+      pdf.text(`${selectedCourt.name}`, pageWidth / 2, 22, { align: 'center' });
+      pdf.text(`Date: ${selectedDate}`, pageWidth / 2, 28, { align: 'center' });
+      pdf.text(`Type: ${causeListType}`, pageWidth / 2, 34, { align: 'center' });
+
+      // Parse HTML table
+      const tempDiv = document.createElement('div');
+      tempDiv.innerHTML = causeListData;
+      const table = tempDiv.querySelector('table');
+
+      if (table) {
+        autoTable(pdf, {
+          html: table,
+          startY: 40,
+          theme: 'grid',
+          styles: { fontSize: 8, cellPadding: 2 },
+          headStyles: { fillColor: [41, 128, 185], textColor: 255 },
+          margin: { top: 40, left: 10, right: 10 },
         });
-        
-        // Generate table with autoTable
-        if (headers.length > 0 && rows.length > 0) {
-          // Calculate available width for columns
-          const marginLeft = 10;
-          const marginRight = 10;
-          const availableWidth = pageWidth - marginLeft - marginRight;
-          const numColumns = headers.length;
-          
-          autoTable(doc, {
-            startY: yPos,
-            head: [headers],
-            body: rows,
-            theme: 'grid',
-            tableWidth: availableWidth,
-            styles: { 
-              fontSize: 6.5, 
-              cellPadding: 2,
-              lineColor: [226, 232, 240],
-              lineWidth: 0.3,
-              overflow: 'linebreak',
-              cellWidth: 'auto',
-              minCellHeight: 6,
-              valign: 'middle',
-              halign: 'left'
-            },
-            headStyles: {
-              fillColor: [16, 185, 129],
-              textColor: [255, 255, 255],
-              fontStyle: 'bold',
-              fontSize: 7,
-              cellPadding: 2.5,
-              halign: 'center',
-              valign: 'middle'
-            },
-            alternateRowStyles: {
-              fillColor: [249, 250, 251]
-            },
-            margin: { left: marginLeft, right: marginRight, top: 20, bottom: 20 },
-            tableLineColor: [226, 232, 240],
-            tableLineWidth: 0.3,
-            didDrawPage: function (data) {
-              // Footer on each page
-              doc.setFontSize(8);
-              doc.setTextColor(100, 116, 139);
-              doc.text(
-                `Page ${doc.internal.getCurrentPageInfo().pageNumber}`,
-                pageWidth / 2,
-                pageHeight - 10,
-                { align: 'center' }
-              );
-              
-              doc.text(
-                `Generated on: ${new Date().toLocaleString('en-IN')}`,
-                pageWidth - 14,
-                pageHeight - 10,
-                { align: 'right' }
-              );
-            }
-          });
-        } else {
-          // Fallback if no structured data found
-          doc.setFontSize(10);
-          doc.setTextColor(100, 116, 139);
-          doc.text('No structured cause list data available.', pageWidth / 2, yPos + 20, { align: 'center' });
-        }
       }
-      
+
       // Save PDF
-      const dateStr = selectedDate.replace(/-/g, '');
-      const courtNameShort = selectedCourt.name.substring(0, 30).replace(/[^a-zA-Z0-9]/g, '_');
-      const filename = `CauseList_${courtNameShort}_${dateStr}_${causeListType}.pdf`;
-      doc.save(filename);
+      const fileName = `CauseList_${selectedCourt.name.replace(
+        /[^a-zA-Z0-9]/g,
+        '_'
+      )}_${selectedDate}.pdf`;
+      pdf.save(fileName);
       
-      console.log('PDF generated successfully:', filename);
+      console.log('PDF generated successfully:', fileName);
       
     } catch (error) {
       console.error('Error generating PDF:', error);
