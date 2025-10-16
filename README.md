@@ -4,11 +4,6 @@ A professional web application for managing and searching e-court records, built
 
 ## Features
 
-✅ **Automatic Token Management**
-- Token generation on app startup
-- Automatic token refresh on 401 responses
-- Secure token storage in localStorage
-
 ✅ **Search Case Details**
 - Search cases by CNR (Case Number Reference)
 - View comprehensive case information including:
