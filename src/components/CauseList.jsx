@@ -51,6 +51,38 @@ const CauseList = () => {
     return `${day}-${month}-${year}`;
   };
 
+  const hasTableData = () => {
+    if (!causeListData) return false;
+    
+    try {
+      const parser = new DOMParser();
+      const htmlDoc = parser.parseFromString(causeListData, 'text/html');
+      const tables = htmlDoc.querySelectorAll('table');
+      
+      if (tables.length === 0) return false;
+      
+      const table = tables[0];
+      const bodyRows = table.querySelectorAll('tbody tr, tr');
+      
+      // Check if there are any data rows (excluding header rows and colspan rows)
+      let dataRowCount = 0;
+      bodyRows.forEach((tr, index) => {
+        const isHeaderRow = tr.querySelectorAll('th').length > 0 && index === 0;
+        const hasColspan = tr.querySelector('td[colspan]');
+        const cells = tr.querySelectorAll('td');
+        
+        if (!isHeaderRow && !hasColspan && cells.length > 0) {
+          dataRowCount++;
+        }
+      });
+      
+      return dataRowCount > 0;
+    } catch (error) {
+      console.error('Error checking table data:', error);
+      return false;
+    }
+  };
+
   const loadStates = async () => {
     try {
       const response = await getStates();
@@ -540,7 +572,8 @@ const CauseList = () => {
             <button 
               className="download-pdf-button"
               onClick={generatePDF}
-              disabled={downloadingPDF}
+              disabled={downloadingPDF || !hasTableData()}
+              title={!hasTableData() ? 'No data available to download' : 'Download cause list as PDF'}
             >
               {downloadingPDF ? (
                 <>

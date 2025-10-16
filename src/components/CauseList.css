@@ -148,9 +148,12 @@
 }
 
 .download-pdf-button:disabled {
-  opacity: 0.7;
+  opacity: 0.5;
   cursor: not-allowed;
   transform: none;
+  background: linear-gradient(135deg, #9ca3af 0%, #6b7280 100%);
+  box-shadow: none;
+  filter: grayscale(0.5);
 }
 
 .download-pdf-button svg {
