@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import Dashboard from './components/Layout/Dashboard';
 import SearchCase from './components/SearchCase';
 import CauseList from './components/CauseList';
+import BulkCauseList from './components/BulkCauseList';
 import { initializeToken } from './services/api';
 import './App.css';
 
@@ -56,6 +57,7 @@ function App() {
     <Dashboard activeTab={activeTab} onTabChange={setActiveTab}>
       {activeTab === 'search-case' && <SearchCase />}
       {activeTab === 'cause-list' && <CauseList />}
+      {activeTab === 'bulk-cause-list' && <BulkCauseList />}
     </Dashboard>
   );
 }

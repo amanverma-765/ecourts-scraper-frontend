@@ -27,6 +27,7 @@ const Dashboard = ({ children, activeTab, onTabChange }) => {
   const menuItems = [
     { id: 'search-case', label: 'Search Case Details', icon: '📋' },
     { id: 'cause-list', label: 'Cause List', icon: '📅' },
+    { id: 'bulk-cause-list', label: 'Bulk Download', icon: '📦' },
   ];
 
   const handleTabChange = (tabId) => {
