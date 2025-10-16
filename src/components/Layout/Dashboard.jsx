@@ -31,6 +31,15 @@ const Dashboard = ({ children, activeTab, onTabChange }) => {
       <div className="dashboard-body">
         {/* Sidebar */}
         <aside className={`sidebar ${sidebarOpen ? 'open' : 'closed'}`}>
+          {sidebarOpen && (
+            <div className="sidebar-brand">
+              <span className="brand-icon">⚖️</span>
+              <div className="brand-text">
+                <div className="brand-title">E-Court</div>
+                <div className="brand-subtitle">Management</div>
+              </div>
+            </div>
+          )}
           <nav className="sidebar-nav">
             {menuItems.map((item) => (
               <button
