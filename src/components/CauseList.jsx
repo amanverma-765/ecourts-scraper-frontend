@@ -104,8 +104,9 @@ const CauseList = () => {
   };
 
   const handleCourtComplexChange = async (courtCode) => {
+    console.log('Court Complex Selected - Court Code:', courtCode);
     setSelectedCourtCode(courtCode);
-    setSelectedCourtNumber('');
+    setSelectedCourtNumber(''); // Reset court number when court complex changes
     setCourtNames([]);
     setCauseListData(null);
 
@@ -114,8 +115,11 @@ const CauseList = () => {
     try {
       const response = await getCourtNames(selectedState, selectedDistrict, courtCode);
       if (response.status === 'success' && response.data?.courtNames) {
+        console.log('Raw court names from API:', response.data.courtNames);
         const parsed = parseCourtNames(response.data.courtNames);
+        console.log('Parsed court names:', parsed);
         setCourtNames(parsed);
+        // Don't auto-select the first court name
       }
     } catch (err) {
       console.error('Error loading court names:', err);
@@ -136,6 +140,15 @@ const CauseList = () => {
     setCauseListData(null);
 
     try {
+      console.log('Cause List Request:', {
+        stateCode: selectedState,
+        districtCode: selectedDistrict,
+        courtCode: selectedCourtCode,
+        courtNumber: selectedCourtNumber,
+        causeListType: causeListType,
+        date: formatDateForAPI(selectedDate),
+      });
+
       const response = await getCauseList({
         stateCode: selectedState,
         districtCode: selectedDistrict,
@@ -232,7 +245,10 @@ const CauseList = () => {
             <label>Court Name *</label>
             <select
               value={selectedCourtNumber}
-              onChange={(e) => setSelectedCourtNumber(e.target.value)}
+              onChange={(e) => {
+                console.log('Court Name Selected - Court Number:', e.target.value);
+                setSelectedCourtNumber(e.target.value);
+              }}
               className="form-select"
               disabled={!selectedCourtCode || loading}
             >

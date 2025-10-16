@@ -179,6 +179,8 @@ export const checkHealth = async () => {
 };
 
 // Helper function to parse court names string
+// Format: "code^courtNumber~displayName#code^courtNumber~displayName#..."
+// Example: "3^1~1-Moushumi De-District and Sessions Judge#3^2~2-Akhtabul Ala-Asstt Sessions Judge"
 export const parseCourtNames = (courtNamesString) => {
   if (!courtNamesString) return [];
 
@@ -186,17 +188,27 @@ export const parseCourtNames = (courtNamesString) => {
   const courts = [];
 
   entries.forEach((entry) => {
-    if (entry.includes('^')) {
-      const [code, details] = entry.split('^');
-      const [id, nameInfo] = code.split('~');
+    // Skip entries without ^ (like "0~Select Court Name" or "D~--------")
+    if (!entry.includes('^')) {
+      return;
+    }
 
-      if (id && id !== '0' && id !== 'D') {
-        const match = details?.match(/~(.+?)~/);
-        const name = match ? match[1] : details;
-
+    // Split by ^ to get code and rest
+    const [code, rest] = entry.split('^');
+    
+    // Split rest by ~ to get courtNumber and displayName
+    // Example: "1~1-Moushumi De-District and Sessions Judge"
+    const parts = rest.split('~');
+    
+    if (parts.length >= 2) {
+      const courtNumber = parts[0]; // The number before ~
+      const displayName = parts[1];  // The name after ~
+      
+      // Filter out invalid entries
+      if (courtNumber && courtNumber !== '0' && courtNumber !== 'D' && displayName) {
         courts.push({
-          id,
-          name: name || details || 'Unknown',
+          id: courtNumber, // This is the actual court number to send to API
+          name: displayName.trim(),
           raw: entry,
         });
       }
