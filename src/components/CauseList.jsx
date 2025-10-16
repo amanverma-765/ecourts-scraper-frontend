@@ -225,14 +225,75 @@ const CauseList = () => {
     try {
       const pdf = new jsPDF('p', 'mm', 'a4');
       const pageWidth = pdf.internal.pageSize.getWidth();
+      const pageHeight = pdf.internal.pageSize.getHeight();
 
-      // Add header
-      pdf.setFontSize(16);
-      pdf.text('Cause List', pageWidth / 2, 15, { align: 'center' });
-      pdf.setFontSize(10);
-      pdf.text(`${selectedCourt.name}`, pageWidth / 2, 22, { align: 'center' });
-      pdf.text(`Date: ${selectedDate}`, pageWidth / 2, 28, { align: 'center' });
-      pdf.text(`Type: ${causeListType}`, pageWidth / 2, 34, { align: 'center' });
+      // Header with professional styling
+      pdf.setFillColor(15, 23, 42); // slate-900
+      pdf.rect(0, 0, pageWidth, 35, 'F');
+      
+      // Top accent border
+      pdf.setFillColor(16, 185, 129); // emerald-500
+      pdf.rect(0, 0, pageWidth, 2, 'F');
+      
+      pdf.setTextColor(255, 255, 255);
+      pdf.setFontSize(20);
+      pdf.setFont('helvetica', 'bold');
+      pdf.text('DAILY CAUSE LIST', pageWidth / 2, 15, { align: 'center' });
+      
+      pdf.setFontSize(9);
+      pdf.setFont('helvetica', 'normal');
+      pdf.text('Official Court Document', pageWidth / 2, 23, { align: 'center' });
+      
+      pdf.setTextColor(0, 0, 0);
+
+      // Court details section
+      let yPos = 45;
+      
+      const courtInfo = [
+        ['Court Name', String(selectedCourt.name || 'N/A')],
+        ['Court Code', String(selectedCourt.code || 'N/A')],
+        ['Date', selectedDate || 'N/A'],
+        ['List Type', causeListType || 'N/A']
+      ];
+
+      autoTable(pdf, {
+        startY: yPos,
+        head: [],
+        body: courtInfo,
+        theme: 'grid',
+        styles: { 
+          fontSize: 9, 
+          cellPadding: 3,
+          lineColor: [226, 232, 240],
+          lineWidth: 0.5
+        },
+        columnStyles: {
+          0: { 
+            fontStyle: 'bold', 
+            fillColor: [241, 245, 249], 
+            textColor: [71, 85, 105],
+            cellWidth: 50
+          },
+          1: { 
+            textColor: [15, 23, 42],
+            fontStyle: 'bold'
+          }
+        },
+        margin: { left: 14, right: 14 }
+      });
+
+      yPos = pdf.lastAutoTable.finalY + 10;
+
+      // Section header for cases
+      pdf.setFillColor(241, 245, 249);
+      pdf.rect(10, yPos, pageWidth - 20, 8, 'F');
+      pdf.setFontSize(11);
+      pdf.setFont('helvetica', 'bold');
+      pdf.setTextColor(30, 41, 59);
+      pdf.text('CASES SCHEDULED', 14, yPos + 6);
+      
+      yPos += 12;
+      pdf.setTextColor(0, 0, 0);
 
       // Parse HTML table
       const tempDiv = document.createElement('div');
@@ -242,12 +303,45 @@ const CauseList = () => {
       if (table) {
         autoTable(pdf, {
           html: table,
-          startY: 40,
-          theme: 'grid',
-          styles: { fontSize: 8, cellPadding: 2 },
-          headStyles: { fillColor: [41, 128, 185], textColor: 255 },
-          margin: { top: 40, left: 10, right: 10 },
+          startY: yPos,
+          theme: 'striped',
+          styles: { 
+            fontSize: 8, 
+            cellPadding: 3,
+            overflow: 'linebreak',
+            lineColor: [226, 232, 240],
+            lineWidth: 0.5
+          },
+          headStyles: { 
+            fillColor: [16, 185, 129],
+            textColor: [255, 255, 255],
+            fontStyle: 'bold',
+            fontSize: 9
+          },
+          alternateRowStyles: { 
+            fillColor: [248, 250, 252]
+          },
+          margin: { left: 14, right: 14 }
         });
+      }
+
+      // Footer with page numbers
+      const totalPages = pdf.internal.getNumberOfPages();
+      for (let i = 1; i <= totalPages; i++) {
+        pdf.setPage(i);
+        pdf.setFontSize(8);
+        pdf.setTextColor(100, 116, 139);
+        pdf.text(
+          `Generated on: ${new Date().toLocaleString('en-IN')}`,
+          14,
+          pageHeight - 10
+        );
+        pdf.text(
+          `Page ${i} of ${totalPages}`,
+          pageWidth - 14,
+          pageHeight - 10,
+          { align: 'right' }
+        );
       }
 
       // Save PDF
